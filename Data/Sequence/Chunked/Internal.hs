@@ -25,6 +25,10 @@ instance Monoid Size where
     {-# INLINE mempty #-}
     mempty = Size 0
 
+instance MaybeGroup Size where
+    {-# INLINE trySubtract #-}
+    trySubtract (Size a) (Size b) _ = Size (a-b)
+
 instance V.Unbox a => Measured Size (Chunk a) where
     {-# INLINE measure #-}
     measure (Chunk v) = Size $ V.length v
