@@ -1,4 +1,4 @@
-module Main(main, firstHalfSC, {-, snocManyBS, snocManySC, snocManySCB, snocManyS-}) where
+module Main(main, firstHalfS, firstHalfSC, {-, snocManyBS, snocManySC, snocManySCB, snocManyS-}) where
 
 import Data.List(nub)
 import Criterion.Main
@@ -45,6 +45,11 @@ snocManyS n = go n mempty where
   go 0 acc = acc
   go n acc = acc `seq` go (n-1) (acc S.|> 0)
 
+consManyL :: Int -> [Word8]
+consManyL n = go n [] where
+    go 0 acc = acc
+    go n acc = acc `seq` go (n-1) (0:acc)
+
 len = 10000
 
 -------------------------------------------split------------------------------------------
@@ -70,7 +75,8 @@ main = defaultMain [
      bench "chunked-builder" $ whnf snocManySCB len,
      bench "chunked-slow" $ whnf snocManySC len,
      bench "bytestring" $ nf snocManyBS len,
-     bench "unchunked" $ whnf snocManyS len
+     bench "unchunked" $ whnf snocManyS len,
+     bench "list" $ whnf consManyL len
      ],
   bgroup "split" [
     bgroup "chunked" $ map splitNChunked range,
