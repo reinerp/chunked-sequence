@@ -15,7 +15,13 @@ import Data.Unboxed
 
 --newtype Size = Size { unSize :: Int }
 data Size = Size { unSize :: {-# UNPACK #-} !Int }
-  deriving(Eq)
+  deriving(Eq, Ord, Show)
+
+instance Num Size where
+    fromInteger = Size . fromInteger
+    a + b = Size (unSize a + unSize b)
+    a - b = Size (unSize a - unSize b)
+
 newtype Chunk a = Chunk { unElem :: V.Vector a }
 newtype Seq a = Seq { unSeq :: FingerTree Size (Chunk a) }
 

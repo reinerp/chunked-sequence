@@ -15,6 +15,7 @@ module Data.Sequence.Chunked
    snocChunk,
    consLargeChunk,
    snocLargeChunk,
+   index,
   )
    where
 
@@ -95,10 +96,14 @@ consLargeChunk chunk (Seq xs) = Seq (Chunk chunk F.<| xs)
 splitAt :: Unbox a => Int -> Seq a -> (Seq a, Seq a)
 splitAt n (Seq xs) = 
   case F.split (\(Size s) -> s >= n) xs of
-      (l,r) | F.measure l == Size n -> (Seq l, Seq r)
-            | otherwise -> case F.viewr l of
-                 EmptyR -> (Seq l, Seq r)
-                 ls :> Chunk lt -> case V.splitAt (n - unSize (F.measure ls)) lt of
-                     (lt1, lt2) -> (snocChunk (Seq ls) lt1, consChunk lt2 (Seq r))
+      (l,x@(Chunk x'),r)
+            | F.measure l == Size n -> (Seq l, Seq (x F.<| r))
+            | F.measure l + Size (V.length x') == Size n -> (Seq (l F.|> x), Seq r)
+            | otherwise -> case V.splitAt (n - unSize (F.measure l)) x' of
+                     (xl, xr) -> (snocChunk (Seq l) xl, consChunk xr (Seq r))
 
-
+{-# INLINABLE index #-}
+index :: Unbox a => Int -> Seq a -> a
+index n (Seq xs) =
+  case F.split (\(Size s) -> s > n) xs of
+      (l,Chunk x', _) -> V.unsafeIndex x' (n - unSize (F.measure l))
